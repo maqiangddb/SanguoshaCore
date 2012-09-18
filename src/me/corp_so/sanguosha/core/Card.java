@@ -1,12 +1,14 @@
 package me.corp_so.sanguosha.core;
 
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 
-public final class Card {
+public class Card {
 	public int category;
 	public int type;
 	public int id;
@@ -84,6 +86,10 @@ public final class Card {
 		this.point = getPointFromStr(point);
 	}
 
+	public Card(Card card) {
+		// TODO Auto-generated constructor stub
+	}
+
 	private static int getPointFromStr(String point) {
 		point = point.trim();
 		if (point.equals("J"))
@@ -127,6 +133,14 @@ public final class Card {
 	@Override
 	public String toString() {
 		return "牌:" + typeMap.get(new Integer(type)) + "(" + colorMap.get(color) + point + ")";
+	}
+
+	public boolean needTarget() {
+		int[] targetMap = {KILL, HEAL, DUEL, DROP, STEAL, OTHER_HAND, IMOK, REST, THUNDER};
+		for (int i : targetMap) {
+			if (i == type) return true;
+		}
+		return false;
 	}
 	
 }

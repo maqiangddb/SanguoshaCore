@@ -25,9 +25,12 @@ public abstract class GameLogic {
 		if (!willDeal) {
 			return;
 		}
+		d("摸牌阶段");
 		Card card1 = cardStack.nextCard();
 		Card card2 = cardStack.nextCard();
+		d(player.toString() + "得到" + card1);
 		player.addCard(card1);
+		d(player.toString() + "得到" + card2);
 		player.addCard(card2);
 	}
 
@@ -43,7 +46,17 @@ public abstract class GameLogic {
 
 	private void judge(Player player) {
 		// TODO Auto-generated method stub
+		d("判定阶段");
 		
+		if (!willJudge) {
+			return;
+		}
+		if (!player.hasJudgeCards()) {
+			d("无需判定,跳过");
+			return;
+		} else {
+			d("需要判定");
+		}
 	}
 
 	private void leadCards(Player player) {
@@ -51,8 +64,17 @@ public abstract class GameLogic {
 		if (!willLead) {
 			return;
 		}
+		d("出牌阶段");
 		while (canAct(player)) {
-			ReactStrategy strategy = player.onLeadCards();
+			d("请出牌");
+			dinfo();
+			ReactStrategy strategy = null;
+			try {
+				strategy = player.onLeadCards();
+			} catch (Exception e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
 			// TODO strategy
 		}
 	}
@@ -77,6 +99,8 @@ public abstract class GameLogic {
 		d("分配阵营");
 		assignGroup(); // 分配阵营
 		
+		sort();
+		
 		selectRole(); // 玩家选择角色
 		
 		// 最初的四张牌
@@ -93,36 +117,59 @@ public abstract class GameLogic {
 		run();
 	}
 
+	private void run() {
+		while (!end()) {
+			for (Player player : playerList) {
+				d(player.toString() + "的回合开始");
+				judge(player);
+				dealCards(player);
+				leadCards(player);
+				endRound(player);
+			}
+		}
+	}
+
+	private void sort() {
+		// 调整顺序,使主公排在第一
+		Player king = selectKing();
+		int kingPos = playerList.indexOf(king);
+		for (int i = 0; i < kingPos; i++) {
+			Player player = playerList.remove(0);
+			playerList.add(player);
+		}
+	}
+
 	private void selectRole() {
-		ArrayList<Player> pList = new ArrayList<Player>(playerList); // 复制?
 		
 		// 主公选择
 		ArrayList<Role> roleListForKing = Role.randomForKing();
-		Player king = null;
-		for (Player p : pList) {
-			if (p.isKing()) {
-				king = p;
-				pList.remove(king);
-				break;
-			}
-		}
+		Player king = selectKing();
 		Role kingRole = userChooseRole(king, roleListForKing);
 		king.setRole(kingRole);
 		Role.setChosen(kingRole); // 表明已经被选择了,不能再次选择此角色
 		
+		int kingPos = playerList.indexOf(king);
+		playerList.remove(king);
+		
 		// 玩家选择角色, 有三个可供选择
-		int size = pList.size();
+		int size = playerList.size();
 		ArrayList<ArrayList<Role>> list = Role.random(size, 3);
 		for (int i = 0; i < size; i++) {
 			ArrayList<Role> l = list.get(i);
-			Player player = pList.get(i);
+			Player player = playerList.get(i);
 			Role role = userChooseRole(player, l);
 			player.setRole(role);
 		}
-		
-		// 将主公排在第一位
-		pList.add(0, king);
-		playerList = pList;
+		playerList.add(kingPos, king); // 复原
+	}
+
+	private Player selectKing() {
+		for (Player p : playerList) {
+			if (p.isKing()) {
+				return p;
+			}
+		}
+		return null;
 	}
 
 	protected abstract Role userChooseRole(Player player, ArrayList<Role> list);
@@ -131,8 +178,11 @@ public abstract class GameLogic {
 	 * print info for debug
 	 */
 	private void dinfo() {
+		d("场上局势");
 		for (Player player : playerList) {
-			d(player.name() + "(" + player.roleName() + ")(" + player.groupName() + ")");
+			d(player.name() + "(" + player.roleName() + ")(" + player.groupName() + ")-" + 
+					player.currentCardsNum() + "张手牌" +
+					"-血" + player.currentBlood() + "/" + player.maxBlood());
 		}
 	}
 
@@ -181,18 +231,6 @@ public abstract class GameLogic {
 
 	protected void d(String str) {
 		System.out.println(str);
-	}
-
-	private void run() {
-		while (!end()) {
-			for (Player player : playerList) {
-				d(player.toString() + "的回合开始");
-				judge(player);
-				dealCards(player);
-				leadCards(player);
-				endRound(player);
-			}
-		}
 	}
 
 	public void setPlayersNum(int num) {

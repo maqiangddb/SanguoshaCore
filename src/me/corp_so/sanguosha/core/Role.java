@@ -12,6 +12,13 @@ public class Role {
 		"郭嘉", "张辽", "许褚",
 		"吕布", "貂蝉", "华佗"
 	};
+	private static final int [] BLOOD_ARRAY = {
+		4, 4, 4, 3,
+		4, 4, 3, 4, 4,
+		3, 4, 3,
+		3, 4, 4, 
+		4, 3, 3,
+	};
 	private static int chosen = -1;
 	
 	private static boolean inList(Role r, ArrayList<Role> list) {
@@ -94,6 +101,10 @@ public class Role {
 	@Override
 	public String toString() {
 		return name();
+	}
+
+	public int blood() {
+		return BLOOD_ARRAY[id];
 	}
 
 }

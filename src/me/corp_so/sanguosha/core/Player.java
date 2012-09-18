@@ -1,14 +1,15 @@
 package me.corp_so.sanguosha.core;
 
-public class Player {
+import java.io.PrintStream;
+import java.util.ArrayList;
+import java.util.Scanner;
 
-	private Role role = null;
-	public int currentBlood;
-	private int currentCardsNum;
-	private Group group; // 阵营
-	private String name;
+public class Player extends PlayerState {
+
+	private GameState gameState;
 	
 	public Player(String name) {
+		super();
 		this.name = name;
 	}
 
@@ -24,15 +25,38 @@ public class Player {
 	 */
 	public void addCard(Card card) {
 		// TODO
-		currentCardsNum++;
+		cards.add(card);
 	}
 	
 	public int currentCardsNum() {
-		return currentCardsNum;
+		return cards.size();
 	}
 
-	public ReactStrategy onLeadCards() {
-		// TODO Auto-generated method stub
+	public ReactStrategy onLeadCards() throws Exception {
+		// TODO 这里的使用输入的形式,后面要改,不过我还不知道如何把这个策略抽象出来
+		
+		PrintStream o = System.out;
+		Scanner scanner = new Scanner(System.in);
+		o.println("您的现有手牌(" + currentCardsNum() + ")");
+		int i = 0;
+		for (Card card : cards) {
+			i++;
+			o.println("" + i + ". " + card);
+		}
+		o.println("选择要使用的手牌,输入0主动结束回合");
+		int c = scanner.nextInt();
+		if (c <= currentCardsNum()) {
+			Card card = cards.get(c-1);
+			o.println("您选择的手牌是" + card);
+			if (card.needTarget()) {
+				o.println("请选择您的目标");
+				o.println(gameState.toString());
+				c = scanner.nextInt();
+			}
+		} else {
+			throw new Exception("无此手牌");
+		}
+		
 		return null;
 	}
 
@@ -60,12 +84,33 @@ public class Player {
 	}
 
 	public void setRole(Role role) {
-		// TODO Auto-generated method stub
 		this.role = role;
+		initBlood();
+	}
+
+	private void initBlood() {
+		// 初始化血量
+		maxBlood = role.blood();
+		if (isKing()) {
+			maxBlood++;
+		}
+		currentBlood = maxBlood;
 	}
 
 	public boolean isKing() {
 		return group.isKing();
+	}
+
+	public boolean hasJudgeCards() {
+		return judgeCards != null && !judgeCards.isEmpty();
+	}
+
+	public int currentBlood() {
+		return currentBlood;
+	}
+
+	public int maxBlood() {
+		return maxBlood;
 	}
 	
 }
