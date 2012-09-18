@@ -2,6 +2,8 @@ package me.corp_so.sanguosha.core;
 
 import java.util.ArrayList;
 
+import javax.management.relation.RoleList;
+
 // 只能运行一份
 public abstract class GameLogic {
 	private CardStack cardStack;
@@ -61,7 +63,10 @@ public abstract class GameLogic {
 	}
 
 	public void start() {
+		d("拿出来牌");
 		cardStack = new CardStack();
+		
+		d("洗牌");
 		cardStack.shuffle();
 		
 		for (int i = 0; i < playersNum; i++) {
@@ -69,27 +74,51 @@ public abstract class GameLogic {
 			playerList.add(player);
 		}
 		
+		d("分配阵营");
 		assignGroup(); // 分配阵营
 		
-		for (Player player : playerList) {
-			// 玩家选择角色
-			// 有三个可供选择
-			ArrayList<Role> list = Role.random(3);
-			Role role = userChooseRole(player, list);
-			player.setRole(role);
-		}
-		
-		dinfo();
+		selectRole(); // 玩家选择角色
 		
 		// 最初的四张牌
-		for (Player player : playerList) {
-			for (int i = 0; i < 4; i++) {
+		for (int i = 0; i < 4; i++) {
+			for (Player player : playerList) {
 				Card card = cardStack.nextCard();
+				d(player.toString() + " 得到一张 " + card);
 				player.addCard(card);
 			}
 		}
 		
+		dinfo();
+		
 		run();
+	}
+
+	private void selectRole() {
+		ArrayList<Player> pList = new ArrayList<Player>(playerList); // 复制?
+		
+		// 主公选择
+		ArrayList<Role> roleListForKing = Role.randomForKing();
+		Player king = null;
+		for (Player p : pList) {
+			if (p.isKing()) {
+				king = p;
+				pList.remove(king);
+				break;
+			}
+		}
+		Role kingRole = userChooseRole(king, roleListForKing);
+		king.setRole(kingRole);
+		Role.setChosen(kingRole); // 表明已经被选择了,不能再次选择此角色
+		
+		// 玩家选择角色, 有三个可供选择
+		int size = pList.size();
+		ArrayList<ArrayList<Role>> list = Role.random(size, 3);
+		for (int i = 0; i < size; i++) {
+			ArrayList<Role> l = list.get(i);
+			Player player = pList.get(i);
+			Role role = userChooseRole(player, l);
+			player.setRole(role);
+		}
 	}
 
 	protected abstract Role userChooseRole(Player player, ArrayList<Role> list);
@@ -99,7 +128,7 @@ public abstract class GameLogic {
 	 */
 	private void dinfo() {
 		for (Player player : playerList) {
-			d(player.name() + "(" + player.roleName() + ")");
+			d(player.name() + "(" + player.roleName() + ")(" + player.groupName() + ")");
 		}
 	}
 
@@ -153,6 +182,7 @@ public abstract class GameLogic {
 	private void run() {
 		while (!end()) {
 			for (Player player : playerList) {
+				d(player.toString() + "的回合开始");
 				judge(player);
 				dealCards(player);
 				leadCards(player);

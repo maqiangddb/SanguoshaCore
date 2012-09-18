@@ -5,11 +5,16 @@ public class Player {
 	private Role role = null;
 	public int currentBlood;
 	private int currentCardsNum;
-	private int group; // 阵营
+	private Group group; // 阵营
 	private String name;
 	
 	public Player(String name) {
 		this.name = name;
+	}
+
+	@Override
+	public String toString() {
+		return name + "(" + role + ")(" + group + ")";
 	}
 
 	/**
@@ -36,12 +41,12 @@ public class Player {
 	}
 
 	public void setGroup(int group) {
-		this.group = group;
+		this.group = new Group(group);
 	}
 
 	public String groupName() {
 		try {
-			return Group.getStr(group);
+			return group.name();
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -57,6 +62,10 @@ public class Player {
 	public void setRole(Role role) {
 		// TODO Auto-generated method stub
 		this.role = role;
+	}
+
+	public boolean isKing() {
+		return group.isKing();
 	}
 	
 }
