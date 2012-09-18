@@ -119,6 +119,10 @@ public abstract class GameLogic {
 			Role role = userChooseRole(player, l);
 			player.setRole(role);
 		}
+		
+		// 将主公排在第一位
+		pList.add(0, king);
+		playerList = pList;
 	}
 
 	protected abstract Role userChooseRole(Player player, ArrayList<Role> list);
