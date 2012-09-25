@@ -2,8 +2,6 @@ package me.corp_so.sanguosha.core;
 
 import java.util.ArrayList;
 
-import javax.management.relation.RoleList;
-
 // 只能运行一份
 public abstract class GameLogic {
 	private CardStack cardStack;
@@ -19,20 +17,7 @@ public abstract class GameLogic {
 	private int loyalNum = 2; // 忠臣数量
 	private int cheatNum = 1; // 奸臣数量
 	private int rebelNum = 4; // 反贼数量
-
-	private void dealCards(Player player) {
-		// TODO Auto-generated method stub
-		if (!willDeal) {
-			return;
-		}
-		d("摸牌阶段");
-		Card card1 = cardStack.nextCard();
-		Card card2 = cardStack.nextCard();
-		d(player.toString() + "得到" + card1);
-		player.addCard(card1);
-		d(player.toString() + "得到" + card2);
-		player.addCard(card2);
-	}
+	private GameState gameState = new GameState();
 
 	private boolean end() {
 		// TODO Auto-generated method stub
@@ -59,6 +44,20 @@ public abstract class GameLogic {
 		}
 	}
 
+	private void dealCards(Player player) {
+		// TODO Auto-generated method stub
+		if (!willDeal) {
+			return;
+		}
+		d("摸牌阶段");
+		Card card1 = cardStack.nextCard();
+		Card card2 = cardStack.nextCard();
+		d(player.toString() + "得到" + card1);
+		player.addCard(card1);
+		d(player.toString() + "得到" + card2);
+		player.addCard(card2);
+	}
+
 	private void leadCards(Player player) {
 		// TODO Auto-generated method stub
 		if (!willLead) {
@@ -76,7 +75,29 @@ public abstract class GameLogic {
 				e.printStackTrace();
 			}
 			// TODO strategy
+			if (strategy.end()) {
+				break;
+			}
+			PlayCard handCard = strategy.card();
+			if (handCard.isKill()) {
+				assert strategy.target1 != null;
+				PlayerState ps = (PlayerState) strategy.target1;
+				Player reactPlayer = findPlayerByState(ps);
+				d(reactPlayer.toString() + "需要响应闪");
+				reactPlayer.onReact(strategy.card());
+			}
 		}
+	}
+
+	private Player findPlayerByState(PlayerState ps) {
+		// TODO Auto-generated method stub
+		for (Player p : playerList) {
+			if (p.id() == ps.id()) {
+				return p;
+			}
+		}
+		assert false;
+		return null;
 	}
 
 	private boolean canAct(Player player) {
@@ -92,16 +113,17 @@ public abstract class GameLogic {
 		cardStack.shuffle();
 		
 		for (int i = 0; i < playersNum; i++) {
-			Player player = new Player("玩家" + (i+1));
+			Player player = new Player(i, "玩家" + (i+1));
 			playerList.add(player);
 		}
 		
 		d("分配阵营");
 		assignGroup(); // 分配阵营
-		
 		sort();
+		gameState.init(playerList, cardStack);
 		
 		selectRole(); // 玩家选择角色
+		gameState.update(playerList, cardStack);
 		
 		// 最初的四张牌
 		for (int i = 0; i < 4; i++) {
@@ -111,15 +133,16 @@ public abstract class GameLogic {
 				player.addCard(card);
 			}
 		}
+		gameState.update(playerList, cardStack);
 		
 		dinfo();
-		
 		run();
 	}
 
 	private void run() {
 		while (!end()) {
 			for (Player player : playerList) {
+				broadcastGameState();
 				d(player.toString() + "的回合开始");
 				judge(player);
 				dealCards(player);
@@ -127,6 +150,18 @@ public abstract class GameLogic {
 				endRound(player);
 			}
 		}
+	}
+
+	private void broadcastGameState() {
+		GameState minGameState = minifyGameState(gameState);
+		for (Player player : playerList) {
+			player.setGameState(minGameState);
+		}
+	}
+
+	private static GameState minifyGameState(GameState gameState) {
+		// TODO 去除阵营信息等
+		return gameState;
 	}
 
 	private void sort() {
@@ -229,7 +264,7 @@ public abstract class GameLogic {
 		}
 	}
 
-	protected void d(String str) {
+	protected static void d(String str) {
 		System.out.println(str);
 	}
 

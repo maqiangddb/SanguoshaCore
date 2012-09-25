@@ -1,35 +1,32 @@
 package me.corp_so.sanguosha.core;
 
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.Set;
 
 public class Card {
 	public int category;
 	public int type;
-	public int id;
+	public int id = -1;
 	public int color;
 	public int point;
 	
-	private static final Integer KILL = 1;
-	private static final Integer HIDE = 2;
-	private static final Integer HEAL = 3;
-    private static final Integer DUEL = 4;
-	private static final Integer DROP = 5;
-	private static final Integer STEAL = 6;
-	private static final Integer MORE = 7;
-	private static final Integer OTHER_HAND = 8;
-	private static final Integer IMOK = 9;
-	private static final Integer ALLKILL = 10;
-	private static final Integer ALLHIDE = 11;
-	private static final Integer ALLHEAL = 12;
-	private static final Integer ALLMORE = 13;
-	private static final Integer REST = 14;
-	private static final Integer THUNDER = 15;
+	static final Integer KILL = 1;
+	static final Integer HIDE = 2;
+	static final Integer HEAL = 3;
+    static final Integer DUEL = 4;
+	static final Integer DROP = 5;
+	static final Integer STEAL = 6;
+	static final Integer MORE = 7;
+	static final Integer OTHER_HAND = 8;
+	static final Integer IMOK = 9;
+	static final Integer ALLKILL = 10;
+	static final Integer ALLHIDE = 11;
+	static final Integer ALLHEAL = 12;
+	static final Integer ALLMORE = 13;
+	static final Integer REST = 14;
+	static final Integer THUNDER = 15;
 	
 	private static final Map<Integer, String> typeMap;
 	static {
@@ -70,7 +67,8 @@ public class Card {
         colorMap = Collections.unmodifiableMap(map);
     }
 	
-	public Card(String type, String color, String point) {
+	public Card(int id, String type, String color, String point) {
+		this.id = id;
 		try {
 			this.type = getTypeFromStr(type);
 		} catch (Exception e) {
@@ -87,7 +85,11 @@ public class Card {
 	}
 
 	public Card(Card card) {
-		// TODO Auto-generated constructor stub
+		super();
+		this.id = card.id;
+		this.type = card.type;
+		this.color = card.color;
+		this.point = card.point;
 	}
 
 	private static int getPointFromStr(String point) {
@@ -104,30 +106,26 @@ public class Card {
 	}
 
 	private static int getColorFromStr(String color) throws Exception {
-		if (colorMap.containsValue(color)) {
-			for (Entry<Integer, String> s : colorMap.entrySet()) {
-				if (color.equals(s.getValue())) {
-					return s.getKey();
-				}
+		for (Entry<Integer, String> s : colorMap.entrySet()) {
+			if (color.equals(s.getValue())) {
+				return s.getKey();
 			}
-		} else {
-			throw new Exception("no color:" + color);
 		}
-		return -1;
+		throw new Exception("no color:" + color);
+	}
+
+	public int type() {
+		return type;
 	}
 
 	public static int getTypeFromStr(String type) throws Exception {
 		type = type.trim();
-		if (typeMap.containsValue(type)) {
-			for (Entry<Integer, String> s : typeMap.entrySet()) {
-				if (type.equals(s.getValue())) {
-					return s.getKey();
-				}
+		for (Entry<Integer, String> s : typeMap.entrySet()) {
+			if (type.equals(s.getValue())) {
+				return s.getKey();
 			}
-		} else {
-			throw new Exception("no type: " + type);
 		}
-		return -1;
+		throw new Exception("no type: " + type);
 	}
 
 	@Override
@@ -141,6 +139,14 @@ public class Card {
 			if (i == type) return true;
 		}
 		return false;
+	}
+
+	public boolean isKill() {
+		return type == KILL;
+	}
+
+	public PlayCard makePlayCard() {
+		return new PlayCard(this, new Card(this));
 	}
 	
 }

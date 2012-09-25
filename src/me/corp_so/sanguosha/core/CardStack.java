@@ -51,12 +51,12 @@ public class CardStack {
 							point = matcher.group(1);
 							int cardsNum = Integer.valueOf(matcher.group(2));
 							for (int i = 0; i < cardsNum; i++) {
-								card = new Card(type, color, point);
+								card = new Card(list.size(), type, color, point);
 								list.add(card);
 							}
 						} else {
 							point = rawPoint;
-							card = new Card(type, color, point);
+							card = new Card(list.size(), type, color, point);
 							list.add(card);
 						}
 					}

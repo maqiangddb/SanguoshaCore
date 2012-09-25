@@ -1,15 +1,15 @@
 package me.corp_so.sanguosha.core;
 
 import java.io.PrintStream;
-import java.util.ArrayList;
 import java.util.Scanner;
 
 public class Player extends PlayerState {
 
 	private GameState gameState;
 	
-	public Player(String name) {
+	public Player(int id, String name) {
 		super();
+		this.id = id;
 		this.name = name;
 	}
 
@@ -47,11 +47,15 @@ public class Player extends PlayerState {
 		int c = scanner.nextInt();
 		if (c <= currentCardsNum()) {
 			Card card = cards.get(c-1);
+			PlayCard handCard = card.makePlayCard();
 			o.println("您选择的手牌是" + card);
 			if (card.needTarget()) {
 				o.println("请选择您的目标");
 				o.println(gameState.toString());
 				c = scanner.nextInt();
+				PlayerState target = gameState.selectPlayer(c);
+				o.println("您选择的玩家是：" + target);
+				return new ReactStrategy(handCard, target);
 			}
 		} else {
 			throw new Exception("无此手牌");
@@ -111,6 +115,23 @@ public class Player extends PlayerState {
 
 	public int maxBlood() {
 		return maxBlood;
+	}
+
+	public void setGameState(GameState minGameState) {
+		gameState = minGameState;
+	}
+
+	// 显然，这里用非继承可以得到更简洁的代码
+	public PlayerState extractState() {
+		return new PlayerState(name, role, group, currentBlood, maxBlood, cards, judgeCards);
+	}
+
+	public ReactStrategy onReact(PlayCard handCard) {
+		
+		
+		// TODO Auto-generated method stub
+		
+		return null;
 	}
 	
 }
