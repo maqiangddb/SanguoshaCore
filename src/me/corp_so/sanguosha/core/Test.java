@@ -2,6 +2,7 @@ package me.corp_so.sanguosha.core;
 
 import java.util.ArrayList;
 import java.util.Scanner;
+//just for test
 
 public class Test extends GameLogic {
 
