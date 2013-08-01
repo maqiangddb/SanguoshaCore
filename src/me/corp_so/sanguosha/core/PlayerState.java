@@ -11,6 +11,10 @@ public class PlayerState extends Target {
 	protected int maxBlood = -1;
 	protected ArrayList<Card> cards = new ArrayList<Card>();
 	protected ArrayList<PlayCard> judgeCards = null;
+
+	//added by MQ
+	protected Equipment equipment;
+	//end
 	
 	public PlayerState() {
 		super();
